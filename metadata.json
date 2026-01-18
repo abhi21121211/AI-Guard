@@ -1,0 +1,5 @@
+{
+  "name": "AI Guard",
+  "description": "A high-end forensic video audit tool designed to detect synthetic media and deepfakes using advanced AI analysis.",
+  "requestFramePermissions": []
+}
