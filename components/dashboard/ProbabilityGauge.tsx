@@ -44,31 +44,41 @@ export const ProbabilityGauge: React.FC<ProbabilityGaugeProps> = ({ score }) => 
         </h3>
         
         <div className="relative w-72 h-72 flex items-center justify-center">
-          <svg className="w-full h-full -rotate-90 transform overflow-visible">
-            <circle
-              cx="144" cy="144" r="120"
-              fill="transparent"
-              stroke="#161e2e"
-              strokeWidth="8"
-              strokeLinecap="round"
-              className="opacity-50"
-            />
-            <motion.circle
-              initial={{ strokeDashoffset: 753 }}
-              animate={{ strokeDashoffset: 753 - (753 * score) / 100 }}
-              transition={{ duration: 1.5, ease: "easeOut" }}
-              cx="144" cy="144" r="120"
-              fill="transparent"
-              stroke={theme.color}
-              strokeWidth="12"
-              strokeDasharray="753"
-              strokeLinecap="round"
-              className="drop-shadow-[0_0_10px_rgba(0,0,0,0.5)]"
-            />
-          </svg>
+          <svg
+  className="w-full h-full -rotate-90"
+  viewBox="0 0 300 300"
+> 
+  <circle
+    cx="150"
+    cy="150"
+    r="120"
+    fill="transparent"
+    stroke="#161e2e"
+    strokeWidth="8"
+  />
+
+  <motion.circle
+    cx="150"
+    cy="150"
+    r="120"
+    fill="transparent"
+    stroke={theme.color}
+    strokeWidth="12"
+    strokeDasharray={2 * Math.PI * 120}
+    initial={{ strokeDashoffset: 2 * Math.PI * 120 }}
+    animate={{
+      strokeDashoffset:
+        2 * Math.PI * 120 -
+        (2 * Math.PI * 120 * score) / 100,
+    }}
+    transition={{ duration: 1.5, ease: "easeOut" }}
+    strokeLinecap="round"
+  />
+</svg>
+
           
           <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span className={`text-6xl font-bold tracking-tighter leading-none ${theme.text} mb-2`}>
+            <span className={`text-4xl font-bold tracking-tighter leading-none ${theme.text} mb-2`}>
               {score.toFixed(2)}%
             </span>
             <div className="flex items-center gap-2">

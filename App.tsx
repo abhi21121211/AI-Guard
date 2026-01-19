@@ -3,6 +3,7 @@ import { Sidebar } from './components/Sidebar';
 import { UploadZone } from './components/UploadZone';
 import { VideoScanner } from './components/VideoScanner';
 import { Dashboard } from './components/Dashboard';
+import { LiveBackground } from './components/LiveBackground';
 import { AppState, ScanResult, MediaMode, ScanSource } from './types';
 import { analyzeMedia } from './services/geminiService';
 import { saveScan, getHistory } from './services/storageService';
@@ -124,20 +125,24 @@ export default function App() {
         </header>
 
         <div className="flex-1 relative overflow-hidden bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-900 via-slate-950 to-slate-950">
-           {appState === AppState.UPLOAD && (
-             <UploadZone 
-              onFileSelected={handleFileSelected} 
-              onUrlSelected={handleUrlSelected}
-             />
-           )}
+           <LiveBackground />
+           
+           <div className="relative z-10 h-full w-full">
+             {appState === AppState.UPLOAD && (
+               <UploadZone 
+                onFileSelected={handleFileSelected} 
+                onUrlSelected={handleUrlSelected}
+               />
+             )}
 
-           {appState === AppState.SCANNING && currentInput && (
-             <VideoScanner file={typeof currentInput === 'string' ? null : (currentInput as File)} url={typeof currentInput === 'string' ? currentInput : undefined} scanningLog={scanningLog} />
-           )}
+             {appState === AppState.SCANNING && currentInput && (
+               <VideoScanner file={typeof currentInput === 'string' ? null : (currentInput as File)} url={typeof currentInput === 'string' ? currentInput : undefined} scanningLog={scanningLog} />
+             )}
 
-           {appState === AppState.DASHBOARD && currentResult && (
-             <Dashboard result={currentResult} />
-           )}
+             {appState === AppState.DASHBOARD && currentResult && (
+               <Dashboard result={currentResult} sourceMedia={currentInput} />
+             )}
+           </div>
         </div>
       </main>
     </div>
