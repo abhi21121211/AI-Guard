@@ -1,12 +1,10 @@
-import { GoogleGenAI, Type, Schema } from "@google/genai";
-import { ScanResult } from "../types";
+import { GoogleGenAI, Type } from "@google/genai";
+import { ScanResult, MediaMode } from "../types";
 
-// Initialize the Gemini API client
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
+// Always initialize with process.env.API_KEY directly as per guidelines
+const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
-// Helper to convert File to Base64 for inline transport
-// Note: For files > 20MB, you would typically use the Resumable Upload API via a backend proxy.
-const fileToBase64 = async (file: File): Promise<string> => {
+const fileToBase64 = async (file: File | Blob): Promise<string> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.readAsDataURL(file);
@@ -21,107 +19,153 @@ const fileToBase64 = async (file: File): Promise<string> => {
   });
 };
 
-const AGENT_LOGS = [
-  "Initializing neural forensic engine...",
-  "Decomposing video frames into latent vectors...",
-  "Analyzing temporal coherence...",
-  "Checking for pixel jitter and compression artifacts...",
-  "Scanning audio-visual synchronization...",
-  "Detecting synthetic lighting anomalies...",
-  "Evaluating biological pulse markers (rPPG)...",
-  "Cross-referencing Generative Adversarial Network signatures...",
-  "Finalizing confidence score..."
-];
+const fetchUrlAsBase64 = async (url: string): Promise<{ data: string, mimeType: string }> => {
+  try {
+    const response = await fetch(url);
+    if (!response.ok) throw new Error("Failed to fetch media from URL. Check if it is publicly accessible.");
+    const blob = await response.blob();
+    const data = await fileToBase64(blob);
+    return { data, mimeType: blob.type };
+  } catch (err) {
+    throw new Error("URL access error: Ensure the link is a direct public media file and allows CORS.");
+  }
+};
 
-export const analyzeVideo = async (
-  file: File,
+const AGENT_LOGS = {
+  video: [
+    "Initializing neural forensic engine...",
+    "Executing Stage 1: Spatial consistency check...",
+    "Executing Stage 2: Temporal flux analysis...",
+    "Executing Stage 3: Sync & Alignment check...",
+    "Executing Stage 4: Metadata & Quality audit...",
+    "Synthesizing final forensic report..."
+  ],
+  image: [
+    "Initializing high-res image buffer...",
+    "Analyzing frame consistency & artifacts...",
+    "Scanning anatomical junctions...",
+    "Evaluating light-source geometry...",
+    "Assessing signal quality & noise floor...",
+    "Generating experimental risk summary..."
+  ]
+};
+
+export const analyzeMedia = async (
+  input: File | string,
+  mode: MediaMode,
   onLogUpdate: (log: string) => void
 ): Promise<Partial<ScanResult>> => {
+  let logInterval: any;
   try {
-    // 1. Start Agentic Log Simulation
+    const logs = AGENT_LOGS[mode];
     let logIndex = 0;
-    const logInterval = setInterval(() => {
-      onLogUpdate(AGENT_LOGS[logIndex % AGENT_LOGS.length]);
+    logInterval = setInterval(() => {
+      onLogUpdate(logs[logIndex % logs.length]);
       logIndex++;
     }, 1500);
 
-    // 2. Prepare Data
-    const base64Data = await fileToBase64(file);
+    let base64Data: string;
+    let mimeType: string;
+
+    if (typeof input === 'string') {
+      onLogUpdate("Fetching media from public URL...");
+      const result = await fetchUrlAsBase64(input);
+      base64Data = result.data;
+      mimeType = result.mimeType;
+    } else {
+      base64Data = await fileToBase64(input);
+      mimeType = input.type;
+    }
     
-    // 3. Define Structured Output Schema
-    const responseSchema: Schema = {
+    const responseSchema = {
       type: Type.OBJECT,
       properties: {
         confidenceScore: {
           type: Type.NUMBER,
-          description: "Probability (0-100) that the video is synthetic or manipulated."
-        },
-        isSynthetic: {
-          type: Type.BOOLEAN,
-          description: "Binary classification of the video."
+          description: "A value from 0-100 representing the likelihood that this media is synthetic or manipulated."
         },
         executiveSummary: {
           type: Type.STRING,
-          description: "A brief, professional forensic summary of the findings."
+          description: "A comprehensive summary synthesizing findings from all 4 stages of reasoning."
         },
         forensicMarkers: {
           type: Type.ARRAY,
           items: {
             type: Type.OBJECT,
             properties: {
-              timestamp: { type: Type.STRING, description: "Timecode of anomaly (MM:SS)" },
-              label: { type: Type.STRING, description: "Short title of the anomaly" },
+              timestamp: { 
+                type: Type.STRING, 
+                description: mode === 'video' ? "Format MM:SS." : "Anatomical region or image label." 
+              },
+              label: { 
+                type: Type.STRING,
+                description: "The name of the marker, prefixed by its reasoning stage (e.g. '[Stage 1] Visual Artifact')."
+              },
               severity: { type: Type.STRING, enum: ["low", "medium", "high"] },
-              description: { type: Type.STRING, description: "Detailed technical explanation" }
+              description: { type: Type.STRING }
             },
             required: ["timestamp", "label", "severity", "description"]
           }
         }
       },
-      required: ["confidenceScore", "isSynthetic", "executiveSummary", "forensicMarkers"]
+      required: ["confidenceScore", "executiveSummary", "forensicMarkers"]
     };
 
-    // 4. Call Gemini 3 Pro with High Thinking Budget
-    const model = 'gemini-3-pro-preview'; // Using Pro for complex reasoning
-    const prompt = "Perform a deep video audit on this file. Analyze for deepfake characteristics, temporal inconsistencies, and AI artifacts.";
+    const modelName = 'gemini-3-pro-preview';
+    const systemInstruction = `You are AI Guard, a world-class forensic media expert.
+Perform an EXPLAINABLE multi-stage reasoning audit to detect deepfakes or synthetic manipulations.
+DO NOT use binary real/fake labels; provide a risk score (0-100).
+
+ANALYSIS APPROACH:
+STAGE 1 — FRAME & VISUAL CONSISTENCY:
+Evaluate frames for: Facial boundary blending/warping, skin texture regularization, eye reflection consistency, hairline/ear artifacts, and lighting direction consistency.
+
+STAGE 2 — TEMPORAL CONSISTENCY:
+Evaluate motion over time for: Facial expression continuity, micro-movement realism (head, jaw, eyes), lighting/shadow stability across frames, and flicker/jitter at facial boundaries.
+
+STAGE 3 — AUDIO–VISUAL ALIGNMENT:
+If audio is present, check for: Lip movement alignment with speech, timing mismatches, and expression–voice emotion consistency.
+
+STAGE 4 — SIGNAL QUALITY & LIMITATIONS:
+Assess: Video resolution, compression artifacts, clip length, and motion availability.
+
+This guidance is educational, not legal or political advice.`;
 
     const response = await ai.models.generateContent({
-      model: model,
+      model: modelName,
       contents: {
         parts: [
-          { inlineData: { mimeType: file.type, data: base64Data } },
-          { text: prompt }
+          { inlineData: { mimeType: mimeType, data: base64Data } },
+          { text: `Perform a comprehensive multi-stage forensic audit on this ${mode} following the 4-stage reasoning protocol. Clearly structure your findings in the summary and categorize markers by stage.` }
         ]
       },
       config: {
+        systemInstruction,
         responseMimeType: "application/json",
         responseSchema: responseSchema,
-        thinkingConfig: {
-          thinkingBudget: 4096 // High thinking level request
-        }
+        thinkingConfig: { thinkingBudget: 4096 }
       }
     });
 
-    clearInterval(logInterval);
-    onLogUpdate("Analysis Complete. Compiling Report...");
+    if (logInterval) clearInterval(logInterval);
+    onLogUpdate("Audit Complete. Decoding JSON result...");
 
-    const jsonText = response.text;
-    if (!jsonText) throw new Error("Empty response from AI");
+    const text = response.text || "{}";
+    const data = JSON.parse(text);
 
-    const data = JSON.parse(jsonText);
-
-    // Map response to ScanResult partial
     return {
       probabilityScore: data.confidenceScore,
-      status: data.confidenceScore > 80 ? 'fake' : data.confidenceScore > 40 ? 'suspicious' : 'clean',
+      status: data.confidenceScore > 75 ? 'fake' : data.confidenceScore > 40 ? 'suspicious' : 'clean',
       analysisSummary: data.executiveSummary,
       forensicMarkers: data.forensicMarkers || [],
+      mode,
       rawResponse: data
     };
 
-  } catch (error) {
-    console.error("Forensic Analysis Failed:", error);
-    onLogUpdate("Critical Error in Neural Engine.");
+  } catch (error: any) {
+    if (logInterval) clearInterval(logInterval);
+    onLogUpdate(error.message || "Forensic Node Failure.");
+    console.error("Analysis error:", error);
     throw error;
   }
 };

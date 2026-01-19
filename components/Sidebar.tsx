@@ -1,5 +1,5 @@
 import React from 'react';
-import { History, ShieldAlert, CheckCircle, FileVideo, Clock, ChevronRight } from 'lucide-react';
+import { History, ShieldAlert, CheckCircle, Clock, ChevronRight, FileVideo, FileImage } from 'lucide-react';
 import { ScanResult } from '../types';
 
 interface SidebarProps {
@@ -16,19 +16,19 @@ export const Sidebar: React.FC<SidebarProps> = ({ history, onSelectResult, curre
           <ShieldAlert className="w-6 h-6" />
           <h1 className="text-xl font-bold tracking-tight text-white">AI Guard</h1>
         </div>
-        <p className="text-xs text-slate-500 font-mono uppercase tracking-widest">Forensic Suite v2.0</p>
+        <p className="text-xs text-slate-500 font-mono uppercase tracking-widest">Neural Audit Suite</p>
       </div>
 
-      <div className="p-4 flex-1 overflow-y-auto">
+      <div className="p-4 flex-1 overflow-y-auto custom-scrollbar">
         <div className="flex items-center gap-2 text-slate-400 mb-4 px-2">
           <History className="w-4 h-4" />
-          <span className="text-xs font-bold uppercase tracking-wider">Scan History</span>
+          <span className="text-xs font-bold uppercase tracking-wider">Local History</span>
         </div>
 
         <div className="space-y-2">
           {history.length === 0 && (
             <div className="text-slate-600 text-sm italic px-2 py-4 text-center border border-dashed border-slate-800 rounded-lg">
-              No recent scans found.
+              No audit logs found locally.
             </div>
           )}
           
@@ -46,14 +46,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ history, onSelectResult, curre
                 scan.status === 'fake' ? 'text-red-500' : 
                 scan.status === 'suspicious' ? 'text-yellow-500' : 'text-green-500'
               }`}>
-                {scan.status === 'fake' ? <ShieldAlert className="w-5 h-5" /> : 
-                 scan.status === 'suspicious' ? <Clock className="w-5 h-5" /> : 
-                 <CheckCircle className="w-5 h-5" />}
+                {scan.mode === 'image' ? <FileImage className="w-5 h-5" /> : <FileVideo className="w-5 h-5" />}
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-slate-200 truncate">{scan.filename}</p>
                 <div className="flex items-center justify-between mt-1">
-                  <span className="text-xs text-slate-500 font-mono">{scan.timestamp.toLocaleDateString()}</span>
+                  <span className="text-xs text-slate-500 font-mono">{new Date(scan.timestamp).toLocaleDateString()}</span>
                   <span className={`text-xs font-mono font-bold ${
                     scan.probabilityScore > 80 ? 'text-red-400' : 
                     scan.probabilityScore > 40 ? 'text-yellow-400' : 'text-green-400'
@@ -71,7 +69,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ history, onSelectResult, curre
       <div className="p-4 border-t border-slate-800">
         <div className="bg-slate-950 rounded p-3 flex items-center gap-3 border border-slate-800/50">
            <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-           <span className="text-xs text-slate-400 font-mono">SYSTEM ONLINE // SECURE</span>
+           <span className="text-[10px] text-slate-400 font-mono">LOCAL STORAGE: ACTIVE</span>
         </div>
       </div>
     </aside>

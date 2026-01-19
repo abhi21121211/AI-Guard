@@ -5,6 +5,9 @@ export interface ForensicMarker {
   description: string;
 }
 
+export type MediaMode = 'video' | 'image';
+export type ScanSource = 'upload' | 'url';
+
 export interface ScanResult {
   id: string;
   filename: string;
@@ -13,6 +16,9 @@ export interface ScanResult {
   status: 'clean' | 'suspicious' | 'fake';
   analysisSummary: string;
   forensicMarkers: ForensicMarker[];
+  mode: MediaMode;
+  sourceType: ScanSource;
+  sourceUrl?: string;
   rawResponse?: any;
 }
 
