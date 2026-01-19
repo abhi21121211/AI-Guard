@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, Variants } from 'framer-motion';
 import { AlertTriangle, CheckCircle, FileText, Share2, Download, Eye, Activity, ClipboardCheck, X, Copy } from 'lucide-react';
 import { ScanResult, TimelineDataPoint } from '../types';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
@@ -10,6 +10,22 @@ interface DashboardProps {
   result: ScanResult;
   sourceMedia?: File | string | null;
 }
+
+const containerVariants: Variants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+      delayChildren: 0.2
+    }
+  }
+};
+
+const itemVariants: Variants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" } }
+};
 
 export const Dashboard: React.FC<DashboardProps> = ({ result, sourceMedia }) => {
   const [shareBtnText, setShareBtnText] = useState("Share Findings");
@@ -235,12 +251,13 @@ export const Dashboard: React.FC<DashboardProps> = ({ result, sourceMedia }) => 
   return (
     <div className="h-full p-8 overflow-y-auto dashboard-content bg-[#050914] text-slate-200">
       <motion.div 
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
         className="max-w-6xl mx-auto space-y-6 pb-20"
       >
         {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-6">
+        <motion.div variants={itemVariants} className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-6">
           <div>
              <h2 className="text-2xl font-bold text-white tracking-tight flex items-center gap-2">
                Forensic Report 
@@ -269,10 +286,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ result, sourceMedia }) => 
                {shareBtnText}
              </button>
           </div>
-        </div>
+        </motion.div>
 
         {/* Main Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Probability Gauge */}
           <div className="bg-slate-900/50 border border-slate-800 rounded-xl p-6 flex flex-col items-center justify-center relative overflow-hidden print:border-slate-600">
              <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.03),transparent_70%)]"></div>
@@ -310,61 +327,50 @@ export const Dashboard: React.FC<DashboardProps> = ({ result, sourceMedia }) => 
                </div>
              </div>
           </div>
-        </div>
+        </motion.div>
 
-        {/* Media Preview & Timeline Split */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 print:block print:space-y-6">
-           {/* Left: Media Preview */}
-           <MediaPreview 
-              file={previewFile} 
-              url={previewUrl} 
-              filename={result.filename} 
-              mode={result.mode} 
-           />
-
-           {/* Right: Timeline Chart */}
-           <div className="bg-slate-900/50 border border-slate-800 rounded-xl p-6 print:border-slate-600 print:break-inside-avoid flex flex-col justify-between h-full min-h-[300px]">
-             <div className="flex items-center justify-between mb-4">
-               <h3 className="text-slate-400 text-sm font-medium uppercase tracking-wider">Anomaly Timeline Analysis</h3>
-               <div className="flex items-center gap-2 text-xs text-slate-500">
-                 <Activity className="w-4 h-4" />
-                 <span>Temporal Coherence</span>
-               </div>
-             </div>
-             
-             <div className="flex-1 w-full min-h-[200px]">
-               <ResponsiveContainer width="100%" height="100%">
-                 <AreaChart data={timelineData}>
-                   <defs>
-                     <linearGradient id="colorScore" x1="0" y1="0" x2="0" y2="1">
-                       <stop offset="5%" stopColor={result.probabilityScore > 50 ? "#ef4444" : "#22d3ee"} stopOpacity={0.3}/>
-                       <stop offset="95%" stopColor={result.probabilityScore > 50 ? "#ef4444" : "#22d3ee"} stopOpacity={0}/>
-                     </linearGradient>
-                   </defs>
-                   <CartesianGrid strokeDasharray="3 3" stroke="#334155" vertical={false} />
-                   <XAxis dataKey="time" stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} />
-                   <YAxis stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} />
-                   <Tooltip 
-                      contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', color: '#f1f5f9' }}
-                      itemStyle={{ color: '#22d3ee' }}
-                   />
-                   <Area 
-                      type="monotone" 
-                      dataKey="anomalyScore" 
-                      stroke={result.probabilityScore > 50 ? "#ef4444" : "#22d3ee"} 
-                      fillOpacity={1} 
-                      fill="url(#colorScore)" 
-                      strokeWidth={2}
-                   />
-                 </AreaChart>
-               </ResponsiveContainer>
+        {/* Timeline Chart (Full Width) */}
+        <motion.div variants={itemVariants} className="bg-slate-900/50 border border-slate-800 rounded-xl p-6 print:border-slate-600 print:break-inside-avoid">
+           <div className="flex items-center justify-between mb-6">
+             <h3 className="text-slate-400 text-sm font-medium uppercase tracking-wider">Anomaly Timeline Analysis</h3>
+             <div className="flex items-center gap-2 text-xs text-slate-500">
+               <Activity className="w-4 h-4" />
+               <span>Temporal Coherence</span>
              </div>
            </div>
-        </div>
+           
+           <div className="h-64 w-full">
+             <ResponsiveContainer width="100%" height="100%">
+               <AreaChart data={timelineData}>
+                 <defs>
+                   <linearGradient id="colorScore" x1="0" y1="0" x2="0" y2="1">
+                     <stop offset="5%" stopColor={result.probabilityScore > 50 ? "#ef4444" : "#22d3ee"} stopOpacity={0.3}/>
+                     <stop offset="95%" stopColor={result.probabilityScore > 50 ? "#ef4444" : "#22d3ee"} stopOpacity={0}/>
+                   </linearGradient>
+                 </defs>
+                 <CartesianGrid strokeDasharray="3 3" stroke="#334155" vertical={false} />
+                 <XAxis dataKey="time" stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} />
+                 <YAxis stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} />
+                 <Tooltip 
+                    contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', color: '#f1f5f9' }}
+                    itemStyle={{ color: '#22d3ee' }}
+                 />
+                 <Area 
+                    type="monotone" 
+                    dataKey="anomalyScore" 
+                    stroke={result.probabilityScore > 50 ? "#ef4444" : "#22d3ee"} 
+                    fillOpacity={1} 
+                    fill="url(#colorScore)" 
+                    strokeWidth={2}
+                 />
+               </AreaChart>
+             </ResponsiveContainer>
+           </div>
+        </motion.div>
 
-        {/* Findings List */}
+        {/* Findings List & Metadata */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 print:block print:space-y-6">
-           <div className="bg-slate-900/50 border border-slate-800 rounded-xl p-6 print:border-slate-600 print:break-inside-avoid h-[400px] flex flex-col">
+           <motion.div variants={itemVariants} className="bg-slate-900/50 border border-slate-800 rounded-xl p-6 print:border-slate-600 print:break-inside-avoid h-[600px] flex flex-col">
               <h3 className="text-white font-semibold mb-4 flex items-center gap-2 print:text-black">
                 <Eye className="w-4 h-4 text-cyan-400" />
                 Detected Forensic Markers
@@ -391,12 +397,22 @@ export const Dashboard: React.FC<DashboardProps> = ({ result, sourceMedia }) => 
                    </div>
                  )}
               </ul>
-           </div>
+           </motion.div>
 
-           <div className="bg-slate-900/50 border border-slate-800 rounded-xl p-6 flex flex-col justify-between print:border-slate-600 print:break-inside-avoid">
-              <div>
-                <h3 className="text-white font-semibold mb-2 print:text-black">Technical Metadata</h3>
-                <div className="grid grid-cols-2 gap-4 mt-4">
+           <motion.div variants={itemVariants} className="bg-slate-900/50 border border-slate-800 rounded-xl p-6 flex flex-col gap-6 print:border-slate-600 print:break-inside-avoid h-[600px]">
+              <h3 className="text-white font-semibold print:text-black">Technical Metadata</h3>
+              
+              <div className="w-full h-48 md:h-56 shrink-0 rounded-lg overflow-hidden border border-slate-800 bg-black/50">
+                  <MediaPreview 
+                    file={previewFile} 
+                    url={previewUrl} 
+                    filename={result.filename} 
+                    mode={result.mode} 
+                    className="h-full w-full min-h-0 border-0 rounded-none" 
+                  />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 flex-1 content-start">
                   <div className="p-3 bg-slate-950 rounded border border-slate-800 print:bg-white print:border-slate-300">
                     <p className="text-xs text-slate-500 uppercase">Input Format</p>
                     <p className="text-sm text-white font-mono print:text-black">{result.filename.split('.').pop()?.toUpperCase() || 'UNKNOWN'}</p>
@@ -413,15 +429,15 @@ export const Dashboard: React.FC<DashboardProps> = ({ result, sourceMedia }) => 
                     <p className="text-xs text-slate-500 uppercase">Timestamp</p>
                     <p className="text-sm text-white font-mono print:text-black">{new Date(result.timestamp).toLocaleTimeString()}</p>
                   </div>
-                </div>
               </div>
+
               <button 
                 onClick={() => setIsJsonModalOpen(true)}
-                className="w-full mt-6 py-2 border border-cyan-500/30 text-cyan-400 text-sm hover:bg-cyan-950/30 transition-colors rounded flex items-center justify-center gap-2 no-print active:scale-95"
+                className="w-full py-2 border border-cyan-500/30 text-cyan-400 text-sm hover:bg-cyan-950/30 transition-colors rounded flex items-center justify-center gap-2 no-print active:scale-95 mt-auto"
               >
                 <FileText className="w-4 h-4" /> View Full JSON Log
               </button>
-           </div>
+           </motion.div>
         </div>
 
         {/* JSON Modal */}
