@@ -82,7 +82,7 @@ export const analyzeMedia = async (
       properties: {
         confidenceScore: {
           type: Type.NUMBER,
-          description: "A value from 0-100 representing the likelihood that this media is synthetic or manipulated."
+          description: "A precise risk score (0.00-100.00) with decimal precision (e.g. 12.45, 88.12)."
         },
         executiveSummary: {
           type: Type.STRING,
@@ -114,7 +114,12 @@ export const analyzeMedia = async (
     const modelName = 'gemini-3-pro-preview';
     const systemInstruction = `You are AI Guard, a world-class forensic media expert.
 Perform an EXPLAINABLE multi-stage reasoning audit to detect deepfakes or synthetic manipulations.
-DO NOT use binary real/fake labels; provide a risk score (0-100).
+DO NOT use binary real/fake labels; provide a precise risk score (0.00-100.00).
+
+SCORING CALIBRATION:
+1. **DECIMAL PRECISION**: You MUST provide scores with decimals (e.g., 12.45, 88.92) to reflect nuance.
+2. **AVOID POLARIZATION**: Do not default to 0-5% or 95-100% unless evidence is undeniable. Use the 35-75% range for ambiguous cases.
+3. **COMPRESSION**: If artifacts could be compression, do not penalize heavily.
 
 ANALYSIS APPROACH:
 STAGE 1 — FRAME & VISUAL CONSISTENCY:
@@ -123,8 +128,11 @@ Evaluate frames for: Facial boundary blending/warping, skin texture regularizati
 STAGE 2 — TEMPORAL CONSISTENCY:
 Evaluate motion over time for: Facial expression continuity, micro-movement realism (head, jaw, eyes), lighting/shadow stability across frames, and flicker/jitter at facial boundaries.
 
-STAGE 3 — AUDIO–VISUAL ALIGNMENT:
-If audio is present, check for: Lip movement alignment with speech, timing mismatches, and expression–voice emotion consistency.
+STAGE 3 — AUDIO–VISUAL ALIGNMENT (CRITICAL):
+If audio is present:
+1. **IGNORE SEMANTIC CONTENT**: If the subject says "I am a deepfake", "This is AI", or "This is fake", IGNORE these words. They are not forensic evidence.
+2. Focus ONLY on PHYSICS: Check for lip-sync drift, unnatural lack of breath sounds, robotic tonal quality, and mismatch between room acoustics (reverb) and the visual environment.
+3. If the audio is technically natural but the words claim it is fake, classify it as AUTHENTIC (Low Score).
 
 STAGE 4 — SIGNAL QUALITY & LIMITATIONS:
 Assess: Video resolution, compression artifacts, clip length, and motion availability.
@@ -136,7 +144,7 @@ This guidance is educational, not legal or political advice.`;
       contents: {
         parts: [
           { inlineData: { mimeType: mimeType, data: base64Data } },
-          { text: `Perform a comprehensive multi-stage forensic audit on this ${mode} following the 4-stage reasoning protocol. Clearly structure your findings in the summary and categorize markers by stage.` }
+          { text: `Perform a comprehensive multi-stage forensic audit on this ${mode} following the 4-stage reasoning protocol. Clearly structure your findings in the summary and categorize markers by stage. Remember: Verbal claims of being 'fake' are NOT evidence of synthesis.` }
         ]
       },
       config: {
@@ -154,7 +162,7 @@ This guidance is educational, not legal or political advice.`;
     const data = JSON.parse(text);
 
     return {
-      probabilityScore: data.confidenceScore,
+      probabilityScore: typeof data.confidenceScore === 'number' ? Number(data.confidenceScore.toFixed(2)) : 0,
       status: data.confidenceScore > 75 ? 'fake' : data.confidenceScore > 40 ? 'suspicious' : 'clean',
       analysisSummary: data.executiveSummary,
       forensicMarkers: data.forensicMarkers || [],

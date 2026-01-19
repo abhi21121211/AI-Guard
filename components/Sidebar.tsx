@@ -56,7 +56,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ history, onSelectResult, curre
                     scan.probabilityScore > 80 ? 'text-red-400' : 
                     scan.probabilityScore > 40 ? 'text-yellow-400' : 'text-green-400'
                   }`}>
-                    {scan.probabilityScore}%
+                    {scan.probabilityScore.toFixed(2)}%
                   </span>
                 </div>
               </div>
