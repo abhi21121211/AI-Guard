@@ -4,6 +4,7 @@ import { UploadZone } from './components/UploadZone';
 import { VideoScanner } from './components/VideoScanner';
 import { Dashboard } from './components/Dashboard';
 import { LiveBackground } from './components/LiveBackground';
+import { GlobalEffects } from './components/GlobalEffects';
 import { AppState, ScanResult, MediaMode, ScanSource } from './types';
 import { analyzeMedia } from './services/geminiService';
 import { saveScan, getHistory } from './services/storageService';
@@ -92,6 +93,8 @@ export default function App() {
 
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-slate-950 text-slate-200 font-sans selection:bg-cyan-500/30">
+      <GlobalEffects />
+      
       <Sidebar 
         history={history} 
         onSelectResult={handleSelectResult} 

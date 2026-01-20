@@ -22,33 +22,38 @@ export const LiveBackground: React.FC = () => {
     window.addEventListener('resize', resize);
     resize();
 
-    const particles: { x: number; y: number; vx: number; vy: number; size: number }[] = [];
-    // Adjust density based on screen size
-    const particleCount = Math.floor((width * height) / 15000); 
+    const particles: { x: number; y: number; vx: number; vy: number; size: number; phase: number }[] = [];
+    const particleCount = Math.floor((width * height) / 12000); 
 
     for (let i = 0; i < particleCount; i++) {
       particles.push({
         x: Math.random() * width,
         y: Math.random() * height,
-        vx: (Math.random() - 0.5) * 0.3, // Slow movement
-        vy: (Math.random() - 0.5) * 0.3,
+        vx: (Math.random() - 0.5) * 0.5, 
+        vy: (Math.random() - 0.5) * 0.5,
         size: Math.random() * 1.5 + 0.5,
+        phase: Math.random() * Math.PI * 2,
       });
     }
 
+    let time = 0;
+
     const animate = () => {
+      time += 0.01;
       ctx.clearRect(0, 0, width, height);
       
-      // Update and draw particles
       particles.forEach((p, i) => {
         p.x += p.vx;
         p.y += p.vy;
 
-        // Bounce off edges
+        // Soft Bounce
         if (p.x < 0 || p.x > width) p.vx *= -1;
         if (p.y < 0 || p.y > height) p.vy *= -1;
 
-        ctx.fillStyle = 'rgba(34, 211, 238, 0.3)'; // Cyan-400 with low opacity
+        // Pulsing opacity
+        const opacity = 0.2 + Math.sin(time + p.phase) * 0.15;
+        ctx.fillStyle = `rgba(34, 211, 238, ${opacity})`;
+        
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
         ctx.fill();
@@ -59,10 +64,12 @@ export const LiveBackground: React.FC = () => {
           const dx = p.x - p2.x;
           const dy = p.y - p2.y;
           const dist = Math.sqrt(dx * dx + dy * dy);
+          const maxDist = 140;
 
-          if (dist < 120) {
+          if (dist < maxDist) {
             ctx.beginPath();
-            ctx.strokeStyle = `rgba(34, 211, 238, ${0.15 * (1 - dist / 120)})`;
+            const lineOpacity = (1 - dist / maxDist) * 0.12;
+            ctx.strokeStyle = `rgba(34, 211, 238, ${lineOpacity})`;
             ctx.lineWidth = 0.5;
             ctx.moveTo(p.x, p.y);
             ctx.lineTo(p2.x, p2.y);

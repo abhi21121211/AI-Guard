@@ -1,5 +1,5 @@
 import React, { useCallback, useState, useEffect } from 'react';
-import { UploadCloud, FileVideo, FileImage, ScanLine, Sparkles, Link as LinkIcon, Globe, Info, CheckCircle2, AlertCircle } from 'lucide-react';
+import { UploadCloud, FileVideo, FileImage, ScanLine, Sparkles, Link as LinkIcon, Globe, Info, CheckCircle2, AlertCircle, Image as ImageIcon, Film } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MediaMode } from '../types';
 
@@ -215,11 +215,19 @@ export const UploadZone: React.FC<UploadZoneProps> = ({ onFileSelected, onUrlSel
             />
             <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.01)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.01)_1px,transparent_1px)] bg-[size:30px_30px]"></div>
             <div className="z-10 flex flex-col items-center">
-              <div className="w-16 h-16 rounded-full bg-slate-800 text-slate-400 flex items-center justify-center mb-4 group-hover:text-cyan-400 group-hover:bg-slate-700 transition-all">
-                 <ScanLine className="w-8 h-8" />
+              <div className={`w-20 h-20 rounded-full flex items-center justify-center mb-5 transition-all duration-300 ${
+                  activeMode === 'video' 
+                    ? 'bg-slate-800 text-slate-400 group-hover:text-cyan-400 group-hover:bg-slate-700 shadow-lg' 
+                    : 'bg-slate-800 text-slate-400 group-hover:text-indigo-400 group-hover:bg-slate-700 shadow-lg'
+                }`}>
+                 {activeMode === 'video' ? <Film className="w-10 h-10" /> : <ImageIcon className="w-10 h-10" />}
               </div>
-              <h3 className="text-xl font-semibold text-white mb-1">Upload Source File</h3>
-              <p className="text-slate-500 font-mono text-xs">DROP MEDIA TO COMMENCE AUDIT</p>
+              <h3 className="text-2xl font-bold text-white mb-2">
+                {activeMode === 'video' ? 'Upload Video Source' : 'Upload Image Source'}
+              </h3>
+              <p className="text-slate-500 font-mono text-xs uppercase tracking-widest bg-slate-900/50 px-3 py-1 rounded-full border border-slate-800">
+                {activeMode === 'video' ? 'DROP FILE (MP4, MOV, WEBM)' : 'DROP FILE (JPG, PNG, WEBP)'}
+              </p>
             </div>
           </motion.div>
         ) : (
@@ -239,7 +247,7 @@ export const UploadZone: React.FC<UploadZoneProps> = ({ onFileSelected, onUrlSel
                 type="url"
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
-                placeholder="https://example.com/media/file.mp4"
+                placeholder={activeMode === 'video' ? "https://example.com/video.mp4" : "https://example.com/image.jpg"}
                 className={`w-full bg-slate-900/50 border rounded-xl py-5 pl-12 pr-32 text-white placeholder-slate-600 focus:outline-none focus:ring-2 transition-all font-mono text-sm ${
                   url && !validation.isValid ? 'border-red-500/50 focus:ring-red-500/20' : 
                   url && validation.isValid ? 'border-green-500/50 focus:ring-green-500/20' : 'border-slate-800 focus:ring-cyan-500/50'

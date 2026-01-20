@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence, Variants } from 'framer-motion';
-import { AlertTriangle, CheckCircle, FileText, Share2, Download, Eye, Activity, ClipboardCheck, X, Copy } from 'lucide-react';
+import { AlertTriangle, CheckCircle, FileText, Download, Eye, Activity, X, Copy } from 'lucide-react';
 import { ScanResult, TimelineDataPoint } from '../types';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { jsPDF } from 'jspdf';
@@ -28,8 +28,6 @@ const itemVariants: Variants = {
 };
 
 export const Dashboard: React.FC<DashboardProps> = ({ result, sourceMedia }) => {
-  const [shareBtnText, setShareBtnText] = useState("Share Findings");
-  const [isCopied, setIsCopied] = useState(false);
   const [isJsonModalOpen, setIsJsonModalOpen] = useState(false);
   const [jsonCopyStatus, setJsonCopyStatus] = useState("Copy JSON");
 
@@ -185,59 +183,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ result, sourceMedia }) => 
     }
   };
 
-  const handleShare = async () => {
-    const textToShare = `AI Guard Forensic Report\n\nFile: ${result.filename}\nStatus: ${result.status.toUpperCase()}\nProbability Score: ${result.probabilityScore}%\n\nExecutive Summary:\n${result.analysisSummary}\n\nScan ID: ${result.id}`;
-    
-    // Web Share API
-    try {
-      if (navigator.share && navigator.canShare && navigator.canShare({ text: textToShare })) {
-        await navigator.share({
-          title: 'AI Guard Forensic Report',
-          text: textToShare,
-        });
-        return;
-      }
-    } catch (error: any) {
-      if (error.name === 'AbortError') return;
-      console.debug('Share cancelled');
-    }
-
-    // Clipboard API
-    try {
-      await navigator.clipboard.writeText(textToShare);
-      setShareBtnText("Copied!");
-      setIsCopied(true);
-      setTimeout(() => {
-        setShareBtnText("Share Findings");
-        setIsCopied(false);
-      }, 2000);
-      return;
-    } catch (err) {
-      console.error('Failed to copy text: ', err);
-    }
-
-    // Legacy Fallback
-    try {
-      const textArea = document.createElement("textarea");
-      textArea.value = textToShare;
-      textArea.style.position = "fixed"; textArea.style.left = "-9999px";
-      document.body.appendChild(textArea);
-      textArea.focus(); textArea.select();
-      const successful = document.execCommand('copy');
-      document.body.removeChild(textArea);
-      if (successful) {
-        setShareBtnText("Copied!");
-        setIsCopied(true);
-        setTimeout(() => { setShareBtnText("Share Findings"); setIsCopied(false); }, 2000);
-      } else {
-        throw new Error("execCommand returned false");
-      }
-    } catch (finalError) {
-      console.error("All share strategies failed", finalError);
-      alert("Unable to share. Please copy manually.");
-    }
-  };
-
   const copyJsonToClipboard = async () => {
     try {
       await navigator.clipboard.writeText(JSON.stringify(result, null, 2));
@@ -260,7 +205,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ result, sourceMedia }) => 
         <motion.div variants={itemVariants} className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-6">
           <div>
              <h2 className="text-2xl font-bold text-white tracking-tight flex items-center gap-2">
-               Forensic Report 
+               Forensic Report asdd
                <span className="text-slate-500 text-base font-mono font-normal">#{result.id.slice(0, 8)}</span>
              </h2>
              <p className="text-slate-400 mt-1 flex items-center gap-2">
@@ -269,21 +214,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ result, sourceMedia }) => 
           </div>
           <div className="flex gap-3">
              <button 
+               type="button"
                onClick={generatePDFReport}
                className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-sm text-slate-200 transition-colors border border-slate-700 active:scale-95"
              >
                <Download className="w-4 h-4" /> Export PDF
-             </button>
-             <button 
-               onClick={handleShare}
-               className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm text-white transition-all shadow-lg active:scale-95 ${
-                 isCopied 
-                   ? 'bg-green-600 hover:bg-green-500 shadow-green-900/20' 
-                   : 'bg-cyan-600 hover:bg-cyan-500 shadow-cyan-900/20'
-               }`}
-             >
-               {isCopied ? <ClipboardCheck className="w-4 h-4" /> : <Share2 className="w-4 h-4" />}
-               {shareBtnText}
              </button>
           </div>
         </motion.div>
