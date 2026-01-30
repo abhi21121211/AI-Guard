@@ -1,5 +1,5 @@
 import React from 'react';
-import { FileText, Cpu } from 'lucide-react';
+import { FileText } from 'lucide-react';
 import { ScanResult } from '../../types';
 
 interface ExecutiveSummaryProps {
@@ -8,33 +8,27 @@ interface ExecutiveSummaryProps {
 
 export const ExecutiveSummary: React.FC<ExecutiveSummaryProps> = ({ result }) => {
   return (
-    <div className="lg:col-span-7 bg-[#0b101b] border border-slate-800/80 rounded-2xl p-8 flex flex-col min-h-[420px]">
-        <div className="flex items-center gap-3 mb-6">
-        <div className="p-2 bg-slate-900 rounded-lg border border-slate-800">
-            <FileText className="w-5 h-5 text-cyan-500" />
-        </div>
-        <h3 className="text-base font-bold text-white">Executive AI Summary</h3>
-        </div>
-        
-        <div className="flex-1 bg-[#111827]/50 rounded-xl p-6 border border-slate-800/50 mb-6 font-mono text-sm leading-7 text-slate-300 overflow-y-auto custom-scrollbar shadow-inner">
-        {result.analysisSummary}
-        </div>
-
-        <div className="flex gap-3">
-        <div className={`px-4 py-2 rounded-lg border flex items-center gap-2 text-xs font-bold uppercase tracking-wider ${
-            result.status === 'clean' 
-            ? 'bg-green-500/10 border-green-500/20 text-green-400' 
-            : 'bg-red-500/10 border-red-500/20 text-red-400'
-        }`}>
-            <div className={`w-2 h-2 rounded-full ${result.status === 'clean' ? 'bg-green-500' : 'bg-red-500'}`}></div>
-            {result.status === 'clean' ? 'Authentic Media' : 'Synthetic Media'}
-        </div>
-        
-        <div className="px-4 py-2 rounded-lg border border-slate-700 bg-slate-800 text-slate-400 text-xs font-bold uppercase tracking-wider flex items-center gap-2">
-            <Cpu className="w-3.5 h-3.5" />
-            Gemini 3 Pro Verified
-        </div>
-        </div>
+    <div className="md:col-span-2 bg-slate-900/50 border border-slate-800 rounded-xl p-6 flex flex-col print:border-slate-600">
+       <div className="flex items-center gap-2 mb-4">
+         <FileText className="w-5 h-5 text-cyan-400" />
+         <h3 className="text-white font-semibold print:text-black">Executive AI Summary</h3>
+       </div>
+       <div className="flex-1 bg-slate-950/50 rounded-lg p-4 border border-slate-800/50 print:bg-white print:border-slate-300 overflow-y-auto max-h-[160px] custom-scrollbar">
+         <p className="text-slate-300 leading-relaxed font-mono text-sm print:text-black">
+           {result.analysisSummary || "Analyzing..."}
+         </p>
+         <div className="mt-4 flex flex-wrap gap-2">
+           {result.probabilityScore > 50 ? (
+             <>
+               <span className="px-2 py-1 bg-red-950/40 text-red-400 border border-red-900/50 rounded text-xs print:text-red-700 print:bg-red-100 print:border-red-200">Artifacts Detected</span>
+               <span className="px-2 py-1 bg-red-950/40 text-red-400 border border-red-900/50 rounded text-xs print:text-red-700 print:bg-red-100 print:border-red-200">Deepfake Signature</span>
+             </>
+           ) : (
+             <span className="px-2 py-1 bg-green-950/40 text-green-400 border border-green-900/50 rounded text-xs print:text-green-700 print:bg-green-100 print:border-green-200">Authentic Media</span>
+           )}
+           <span className="px-2 py-1 bg-slate-800 text-slate-400 border border-slate-700 rounded text-xs print:text-gray-700 print:bg-gray-100 print:border-gray-300">Gemini 3 Pro Verified</span>
+         </div>
+       </div>
     </div>
   );
 };

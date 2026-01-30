@@ -1,80 +1,40 @@
 import React from 'react';
-import { Eye, CheckCircle, AlertTriangle, AlertOctagon, Info } from 'lucide-react';
-import { ForensicMarker } from '../../types';
+import { Eye, CheckCircle } from 'lucide-react';
+import { ScanResult } from '../../types';
 
 interface ForensicMarkersProps {
-  markers: ForensicMarker[];
+  result: ScanResult;
 }
 
-export const ForensicMarkers: React.FC<ForensicMarkersProps> = ({ markers }) => {
-  
-  const getSeverityConfig = (severity: string) => {
-    // Normalize string to handle potential case variations
-    const s = severity?.toLowerCase() || 'low';
-    
-    switch(s) {
-      case 'high':
-        return {
-          color: 'text-red-400',
-          bgColor: 'bg-red-500/10',
-          borderColor: 'border-red-500/20',
-          dotColor: 'bg-red-500',
-          icon: AlertOctagon
-        };
-      case 'medium':
-        return {
-          color: 'text-yellow-400',
-          bgColor: 'bg-yellow-500/10',
-          borderColor: 'border-yellow-500/20',
-          dotColor: 'bg-yellow-500',
-          icon: AlertTriangle
-        };
-      case 'low':
-      default:
-        return {
-          color: 'text-cyan-400',
-          bgColor: 'bg-cyan-500/10',
-          borderColor: 'border-cyan-500/20',
-          dotColor: 'bg-cyan-500',
-          icon: Info
-        };
-    }
-  };
-
+export const ForensicMarkers: React.FC<ForensicMarkersProps> = ({ result }) => {
   return (
-    <div className="bg-[#0b101b] border border-slate-800/80 rounded-2xl p-8 flex flex-col h-[400px]">
-        <h3 className="text-xs font-mono font-bold text-slate-400 uppercase tracking-[0.2em] mb-6 flex items-center gap-2">
-            <Eye className="w-4 h-4 text-cyan-500" /> Detected Forensic Markers
-        </h3>
-        <div className="flex-1 overflow-y-auto custom-scrollbar pr-2 space-y-3">
-            {markers.length > 0 ? markers.map((m, i) => {
-              const style = getSeverityConfig(m.severity);
-              const Icon = style.icon;
-              
-              return (
-                <div key={i} className={`bg-[#111827] border ${style.borderColor} rounded-lg p-4 transition-colors relative overflow-hidden group hover:bg-[#161e2e]`}>
-                    {/* Left Color Bar */}
-                    <div className={`absolute left-0 top-0 bottom-0 w-1 ${style.dotColor} opacity-80 shadow-[0_0_8px_rgba(0,0,0,0.5)]`}></div>
-                    
-                    <div className="flex items-center justify-between mb-2 pl-3">
-                        <div className="flex items-center gap-2">
-                          <Icon className={`w-3.5 h-3.5 ${style.color}`} />
-                          <span className="text-xs font-bold text-slate-200 uppercase tracking-wide">{m.label}</span>
-                        </div>
-                        <span className={`text-[10px] font-mono font-bold ${style.color} ${style.bgColor} px-2 py-0.5 rounded border ${style.borderColor}`}>
-                          {m.timestamp}
-                        </span>
-                    </div>
-                    <p className="text-xs text-slate-400 leading-relaxed pl-3 border-l border-slate-800/50 ml-0.5">{m.description}</p>
+    <div className="bg-slate-900/50 border border-slate-800 rounded-xl p-6 print:border-slate-600 print:break-inside-avoid h-[600px] flex flex-col">
+      <h3 className="text-white font-semibold mb-4 flex items-center gap-2 print:text-black">
+        <Eye className="w-4 h-4 text-cyan-400" />
+        Detected Forensic Markers
+      </h3>
+      <ul className="space-y-3 overflow-y-auto pr-2 custom-scrollbar flex-1 print:max-h-none print:overflow-visible">
+         {result.forensicMarkers.length > 0 ? result.forensicMarkers.map((marker, idx) => (
+           <li key={idx} className="flex items-start gap-3 p-3 bg-slate-950 rounded-lg border border-slate-800/50 hover:border-cyan-500/30 transition-colors print:bg-white print:border-slate-300">
+              <div className={`mt-0.5 w-2 h-2 rounded-full flex-shrink-0 ${
+                marker.severity === 'high' ? 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]' : 
+                marker.severity === 'medium' ? 'bg-yellow-500' : 'bg-cyan-500'
+              }`}></div>
+              <div>
+                <div className="flex items-center gap-2 mb-0.5">
+                   <span className="text-xs text-cyan-400 font-mono bg-cyan-950/30 px-1.5 py-0.5 rounded print:text-cyan-700 print:bg-cyan-100">{marker.timestamp}</span>
+                   <span className="text-xs font-semibold text-slate-300 print:text-black">{marker.label}</span>
                 </div>
-              );
-            }) : (
-            <div className="flex flex-col items-center justify-center h-full text-slate-600">
-                <CheckCircle className="w-10 h-10 mb-3 opacity-20" />
-                <span className="text-xs font-bold uppercase tracking-widest opacity-40">No Markers Detected</span>
-            </div>
-            )}
-        </div>
+                <p className="text-sm text-slate-400 print:text-gray-700">{marker.description}</p>
+              </div>
+           </li>
+         )) : (
+           <div className="flex flex-col items-center justify-center h-full text-slate-600">
+              <CheckCircle className="w-8 h-8 mb-2 opacity-20" />
+              <span className="text-xs uppercase tracking-widest">No Markers Detected</span>
+           </div>
+         )}
+      </ul>
     </div>
   );
 };
